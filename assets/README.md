@@ -7,6 +7,7 @@ Recent Searches are intended to be stored below but I could not peice together t
 Within Local Storage, you can find the most recent search. Again, this is intended to save all searches but hoping for guidance on how to correct this. 
 
 ## Screenshot
+./assets/weather-dash-screeny
 
 ## Deployed Link
 https://robstowe.github.io/Weather-Dashboard/
