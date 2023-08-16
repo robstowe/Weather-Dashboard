@@ -1,115 +1,186 @@
-var searchResultsEl = document.querySelector('#search-results');
-var userSearchEl = document.querySelector('#q');
-var searchFormEl = document.querySelector('#search-form');
-var submitBtn = document.querySelector('#btn btn-primary');
-var currentDate = dayjs().format('MM/DD/YYYY');
-var currentDayContainer = document.querySelector('#current-day');
-var fiveDay = document.querySelector('#five-day');
-var cityLat = 41.85;
-var cityLon = -87.65;
+const cityNameEl = document.querySelector('#city-name')
+const qInput = document.querySelector('#q')
+const searchForm = document.querySelector('#city-search')
+const apiKey = 'e15c17ab5737c79cccfc6cb26a3943b2'
+const currentTempEl = document.querySelector('#current-temp')
+const currentWindSpeedEl = document.querySelector('#current-wind-speed')
+const currentHumidityEl = document.querySelector('#current-humidity')
+const currentIconImageEl = document.querySelector('#current-icon-image')
+const searchHistoryEl = document.querySelector('#search-history')
+let q = '';
+
+let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
 
 
-function getCityWeather(event) { //this is the first function to get it started
-    event.preventDefault();
-    var cityInput = userSearchEl.value
-    currentWeather(cityInput);
-    //call function to create history, save in localstorage and pull from local storage. similar to coding quiz 
-    console.log(currentDate);
+//for every item saved in localStorage, create a link and display it on page.
+function displaySearchHistory() {
+
+    const searchHistoryHeaderEl = document.querySelector('#search-history-header')
+
+
+
+    for (let i = 0; i < searchHistory.length; i++) {
+        const searchHistoryItem = document.createElement('a')
+        searchHistoryItem.className = 'list-group-item list-group-item-action'
+        searchHistoryItem.textContent = searchHistory[i]
+        searchHistoryEl.appendChild(searchHistoryItem)
+        searchHistoryHeaderEl.className = 'd-block';
+
+    }
 }
 
-var currentWeather = function (cityName) {
-    // event.preventDefault();
-    var requestUrl = 'https://api.openweathermap.org/data/2.5/weather?q=' + cityName + '&units=imperial&lastupdate&appid=' + '65aa2c7078fbf368ef9fa2e69bab9001'
+
+function search() {
+
+    function generateSearchHistory() {
+
+        //if item is not currently saved to localStorage, save it. Prevents reloading of duplicate items if item is re-searched as opposed to clicked.
+
+        if ((searchHistory.indexOf(q) === -1) && (q !== '')) {
+            searchHistory.push(q)
+        }
+
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+
+        //clear search history element to prevent duplicates
+
+        searchHistoryEl.innerHTML = '';
+
+        displaySearchHistory();
+    }
 
 
-    fetch(requestUrl)
+    generateSearchHistory();
+    const geoApiUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${q}&appid=${apiKey}`
+
+
+    //fetch geo api to turn the city name into lat and lon coordinates
+    fetch(geoApiUrl)
         .then(function (response) {
             return response.json();
         })
         .then(function (data) {
-            console.log(data);
-            var nameOfCity = document.createElement("h4")
-            nameOfCity.textContent = data.name + " (" + currentDate+ ")"
-            currentDayContainer.append(nameOfCity);
-            var cityTemp = document.createElement("p");
-            cityTemp.textContent = "Temp: " + data.main.temp
-            currentDayContainer.append(cityTemp);
-            var cityWind = document.createElement("p");
-            cityWind.textContent = "Wind: " + data.wind.speed
-            currentDayContainer.append(cityWind);
-            var cityHumidity = document.createElement("p");
-            cityHumidity.textContent = "Humidity: " + data.main.humidity
-            currentDayContainer.append(cityHumidity);
+            const lat = data[0].lat;
+            const lon = data[0].lon;
+            const state = data[0].state;
 
-            currentDayContainer.className = 'recentSearch'
-            // nameOfCity.className = 'recentSearch'
-            // cityTemp.className = 'recentSearch'
-            // cityWind.className = 'recentSearch'
-            // cityHumidity.className = 'recentSearch'
+            const weatherApiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`
 
-            var cityLat = data.coord.lat
-            var cityLon = data.coord.lon
-            var fiveDayForecastURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + cityLat + "&lon=" + cityLon + '&units=imperial&lastupdate&appid='+ 'f30dc0b71f772a037a522282770190be' 
-
-            var iconValue = data.weather[0].icon;
-            var icon = "http://openweathermap.org/img/wn/" + iconValue + ".png"
-            var currentDayIcon = document.createElement("IMG");
-            currentDayIcon.setAttribute("src", icon);
-            currentDayContainer.append(currentDayIcon);
-
-            fetch(fiveDayForecastURL)
+            //using lat and lon coord, fetch the weather api to get current weather data and display it on the page in main card.
+            fetch(weatherApiUrl)
                 .then(function (response) {
                     return response.json();
-
                 })
-                .then(function (response) {
-                    console.log(response);
-                    for (let i = 1; i < 6; i++) {
-                        var fiveDayContainer = document.createElement("div");
-                        var forecastDate = document.createElement("p");
-                        forecastDate.textContent = dayjs().add(i,"day").format('MM/DD/YYYY');
-                        fiveDayContainer.append(forecastDate)
+                .then(function (data) {
+                    const currentCity = data.name;
+                    const currentTemp = Math.round(data.main.temp);
+                    const currentWindSpeed = Math.round(data.wind.speed);
+                    const currentHumidity = data.main.humidity;
+                    const iconCode = data.weather[0].icon
+                    const iconImage = `https://openweathermap.org/img/wn/${iconCode}@2x.png`
 
-    
-                        //fiveDayContainer.setAttribute("class", "card")
-                        var forecastTemp = document.createElement("p");
-                        forecastTemp.textContent = "Temp: " + response.daily[i].temp.day
-                        fiveDayContainer.append(forecastTemp) 
-                        var fiveDayWind = document.createElement("p");
-                        fiveDayWind.textContent = "Wind: " + response.daily[i].wind_speed
-                        fiveDayContainer.append(fiveDayWind)
-                        var fiveDayHumid = document.createElement("p");
-                        fiveDayHumid.textContent = "Humidity: " + response.daily[i].humidity
-                        fiveDayContainer.append(fiveDayHumid)
+                    currentIconImageEl.setAttribute('src', iconImage)
+                    cityNameEl.textContent = `Current Weather for: ${currentCity}, ${state}`;
+                    currentTempEl.textContent = `Temp: ${currentTemp} \u00B0F`;
+                    currentWindSpeedEl.textContent = `Wind Speed: ${currentWindSpeed} MPH`;
+                    currentHumidityEl.textContent = `Humidity: ${currentHumidity}%`;
 
-                        fiveDay.append(fiveDayContainer)
+                    const fiveDayApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`
 
-                        console.log(forecastTemp);
-    
-                        var iconValue = response.daily[i].weather[0].icon;
-                        var icon = "http://openweathermap.org/img/wn/" + iconValue + ".png"
-                        var fiveDayIcon = document.createElement("IMG");
-                        fiveDayIcon.setAttribute("src", icon);
-                        fiveDayContainer.append(fiveDayIcon);
+                    //use same lat and lon to fetch the 5day/3hour api to get future weather data.
+                    fetch(fiveDayApiUrl)
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (data) {
 
-                        fiveDayContainer.className = "fiveDay"
+                            //clears the card group element to prevent duplicates
+                            document.querySelector('.card-group').innerHTML = '';
 
-                        localStorage.setItem("Search History", cityName)
-                    }
+                            // Dynamically displays  '5 Day Forecast' header
+                            const fiveDayHeaderEl = document.querySelector('#five-day-header');
+
+                            fiveDayHeaderEl.className = '';
+                            fiveDayHeaderEl.className = 'd-block';
+
+                            //increments by 8, since there are 40 responses for the api call - 8 per day. This pulls 5 different days spaced 24 hours apart. Dynamically creates cards for each day with their respective information.
+                            for (let i = 0; i < 40; i += 8) {
+                                const temp = Math.round(data.list[i].main.temp);
+                                const wind = Math.round(data.list[i].wind.speed);
+                                const humidity = data.list[i].main.humidity;
+                                const icon = data.list[i].weather[0].icon;
+
+                                //build each individual card
+                                const cardTitleEl = document.createElement('h5');
+                                const cardIcon = document.createElement('img');
+                                const cardTempEl = document.createElement('p');
+                                const cardWindEl = document.createElement('p');
+                                const cardHumidityEl = document.createElement('p');
+                                const cardBodyEl = document.createElement('div');
+                                const cardEl = document.createElement('div');
+
+                                cardTitleEl.className = 'card-title';
+                                cardIcon.className = 'card-icon';
+                                cardTempEl.className = 'card-temp';
+                                cardWindEl.className = 'card-wind';
+                                cardHumidityEl.className = 'card-humidity';
+                                cardBodyEl.className = 'card-body';
+                                cardEl.className = 'card mx-1';
+
+                                cardTitleEl.textContent = dayjs(data.list[i].dt_txt).format('dddd');
+                                cardIcon.setAttribute('src', `https://openweathermap.org/img/wn/${icon}.png`)
+                                cardTempEl.textContent = `Temp: ${temp} \u00B0F`;
+                                cardWindEl.textContent = `Wind: ${wind} MPH`;
+                                cardHumidityEl.textContent = `Humidity: ${humidity}%`;
+
+                                cardBodyEl.appendChild(cardTitleEl)
+                                cardBodyEl.appendChild(cardTempEl)
+                                cardBodyEl.appendChild(cardWindEl)
+                                cardBodyEl.appendChild(cardHumidityEl)
+                                cardBodyEl.appendChild(cardIcon)
+                                cardEl.appendChild(cardBodyEl);
+                                document.querySelector('.card-group').appendChild(cardEl);
+
+                                //change card background-color based on selected temperature rules
+                                if (temp >= 80) {
+                                    cardBodyEl.className = 'card-body hot';
+                                } else if (temp >= 70 && temp < 80) {
+                                    cardBodyEl.className = 'card-body warm';
+                                } else if (temp > 60 && temp < 70) {
+                                    cardBodyEl.className = 'card-body less-warm';
+                                } else if (temp <= 60) {
+                                    cardBodyEl.className = 'card-body light-jacket';
+                                } else if (temp > 45 && temp < 60) {
+                                    cardBodyEl.className = 'card-body cold';
+                                } else if (temp <= 45) {
+                                    cardBodyEl.className = 'card-body freezing';
+                                }
+
+                            }
+                        })
+
                 })
         })
 }
 
-function searchHistory() {
-    localStorage.setItem("Search History", cityName)
-    
+let newSearch = function (event) {
+    event.preventDefault();
+
+    q = qInput.value.trim();
+
+    search();
+
+}
+
+function displayFromHistory(event) {
+    q = event.target.innerText;
+    search();
 }
 
 
 
+//respond to submit click on search form.
 
-
-
-
-
-searchFormEl.addEventListener('submit', getCityWeather);
+displaySearchHistory();
+searchForm.addEventListener('submit', newSearch);
+searchHistoryEl.addEventListener('click', displayFromHistory);

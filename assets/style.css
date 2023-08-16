@@ -1,50 +1,23 @@
-.mb-3{
-    height: 100%;
-    
+.hot {
+    background-color: #e35c6a;
 }
 
-.search-form {
-    background-color: rgb(42, 44, 44);
-    column-width: auto;
-    margin: 0;
+.warm {
+    background-color: #f1aeb5;
 }
 
-.title {
-    text-align: center;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    background-color: rgb(42, 96, 245);
-    color: white;
-    margin: 0;
-    padding: 7px;
-    font-size: 30px;
+.less-warm {
+    background-color: #f8d7d9;
 }
 
-.past-search {
-    margin-top: 10px;
+.light-jacket {
+    background-color: #cfe1fe;
 }
 
-.recentSearch{
-    background-color: rgb(40, 41, 43);
-    margin: 0px;
-    color: white;
+.cold {
+    background-color: #6ea7fd;
 }
-.card {
-    margin-left: 10px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    border: 50px;
-    border-color: black;
-    font-size: 14px;
-    padding: 15px;
-    display: inline-flex;
-}  
 
-.fiveDay{
-    display: inline-block;
-    background-color: rgb(40, 41, 43);
-    color: white;
-    width: auto;
-    padding: 5px;
-    margin-right: 15px;
-    margin-top: 15px;
+.freezing {
+    background-color: #3d8bfd;
 }
